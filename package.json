@@ -6,7 +6,7 @@
     "build": "svelte-kit build",
     "package": "svelte-kit package",
     "preview": "svelte-kit preview",
-    "start": "node build/index.js"
+    "start": "node .svelte-kit/build/index.js"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "next",

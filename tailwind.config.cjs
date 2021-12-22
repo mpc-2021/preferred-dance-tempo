@@ -13,11 +13,6 @@ const config = {
   },
 
   plugins: [],
-
-  purge: [
-    './src/**/*.html',
-    './src/**/*.svelte'
-  ],
 };
 
 module.exports = config;

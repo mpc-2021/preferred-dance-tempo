@@ -1,19 +1,38 @@
-<script>
-    import {onMount} from "svelte";
-    import {isPlaying, tempo} from "../stores";
+<svelte:window on:keydown={handleKeydown}/>
 
-    let audioContext, timerID, nextNoteTime = 0.0, currentNote = 0, noteQueue = [];
-    const samples = new Map;
+<script>
+    export let pattern = 1;
+    import {onMount} from "svelte";
+    import {isPlaying, tempo, hasPlayed, hasConfirmed} from "../stores";
+    import {SEQUENCER_MAX_STEPS} from "../constants";
+
+    let audioContext, timerID, nextNoteTime = 0.0, currentNote = 0;
+    const noteQueue = [];
     const lookahead = 25.0; // How frequently to call scheduling function (in milliseconds)
     const scheduleAheadTime = 0.1; // How far ahead to schedule audio (sec)
+    const sequence = {kick: [], snare: [], hat: []};
+    const samples = new Map;
+
+    if (pattern < 1 || pattern > 8) {
+        pattern = 1;
+    }
 
     onMount(() => {
         audioContext = window.AudioContext ? new AudioContext() : new webkitAudioContext();
         setupSamples();
+        setupPattern();
     });
 
+    const handleKeydown = (event) => {
+        switch (event.key) {
+            case ' ':
+                $isPlaying ? stop() : play();
+                break;
+        }
+    };
+
     const setupSamples = () => {
-        ['kick']
+        Object.keys(sequence)
             .forEach(async f => {
                 // SvelteKit magically knows to find the sample in the static dir...
                 // const response = await fetch(`${assets}/samples/${f}.wav`);
@@ -24,8 +43,37 @@
                 }, error => {
                     debugger;
                 });
+
                 samples.set(f, audioBuffer);
             });
+    };
+
+    // Read the sequencer pattern.
+    const setupPattern = async () => {
+        const response = await fetch(`patterns/${pattern}.txt`);
+        const text = await response.text();
+
+        text.split('\n').forEach(line => {
+            let instrument;
+            switch (line[0]) {
+                case 'H':
+                    instrument = 'hat';
+                    break;
+                case 'S':
+                    instrument = 'snare';
+                    break;
+                case 'K':
+                    instrument = 'kick';
+                    break;
+            }
+            [...line].forEach(char => {
+                if (['x', 'o'].includes(char)) {
+                    sequence[instrument].push(true);
+                } else if (char === '-') {
+                    sequence[instrument].push(false);
+                }
+            })
+        });
     };
 
     const stop = () => {
@@ -42,14 +90,17 @@
         currentNote = 0;
         nextNoteTime = audioContext.currentTime;
         $isPlaying = true;
+        $hasPlayed = true;
         scheduler(); // kick off scheduling
         while (noteQueue.length && noteQueue[0].time < nextNoteTime) {
             // drawNote = notesInQueue[0].note;
-            noteQueue.shift();   // remove note from queue
+            // remove note from queue
+            noteQueue.shift();
         }
         // requestAnimationFrame(draw); // start the drawing loop.
     };
 
+    // Holding onto this in case we decide we want to draw something during playback.
     // const draw = () => {
     //     // let drawNote = lastNoteDrawn;
     //     const currentTime = audioContext.currentTime;
@@ -87,17 +138,28 @@
         noteQueue.push({note: beatNumber, time: time});
         // console.log(beatNumber, time);
 
-        playSample(samples.get('kick'), time);
+        // Play samples that are 'true' for this beat.
+        if (sequence.kick[beatNumber]) {
+            playSample(samples.get('kick'), time);
+        }
+        if (sequence.snare[beatNumber]) {
+            playSample(samples.get('snare'), time);
+        }
+        if (sequence.hat[beatNumber]) {
+            playSample(samples.get('hat'), time);
+        }
+        // Or...
+        // Object.keys(sequence).forEach(k => sequence[k][beatNumber] && playSample(samples.get(k), time));
     }
 
     const nextNote = () => {
-        const secondsPerBeat = 60.0 / $tempo;
+        const secondsPerBeat = (60.0 / $tempo) / 4.; // Semiquaver divisions
 
         nextNoteTime += secondsPerBeat; // Add beat length to last beat time
 
         // Advance the beat number, wrap to zero
         currentNote++;
-        if (currentNote === 4) {
+        if (currentNote === SEQUENCER_MAX_STEPS) {
             currentNote = 0;
         }
     }
@@ -105,17 +167,22 @@
     const playSample = (audioBuffer, time) => {
         const sampleSource = audioContext.createBufferSource();
         sampleSource.buffer = audioBuffer;
-        // sampleSource.playbackRate.value = playbackRate;
         sampleSource.connect(audioContext.destination)
         sampleSource.start(time);
         return sampleSource;
     };
+
+    $: {
+        $hasConfirmed && stop();
+        $hasConfirmed = false;
+    }
 </script>
 
 <!--<label for=bpm>Tempo</label>-->
-<input class="w-full" name=bpm id=bpm type=range min=20 max=300 bind:value={$tempo} step=.1/>
+<input class="w-full my-4" name=bpm id=bpm type=range min=20 max=300 bind:value={$tempo} step=.1/>
 {#if $isPlaying}
-    <button class="bg-red-500 hover:bg-red-400 border-red-700 hover:border-red-500" on:click={stop}>Stop</button>
+    <button class="my-4 w-24 bg-red-500 hover:bg-red-400 border-red-700 hover:border-red-500" on:click={stop}>Stop</button>
 {:else}
-    <button class="bg-green-500 hover:bg-green-400 border-green-700 hover:border-green-500" on:click={play}>Play</button>
+    <button class="my-4 w-24 bg-green-500 hover:bg-green-400 border-green-700 hover:border-green-500" on:click={play}>Play
+    </button>
 {/if}

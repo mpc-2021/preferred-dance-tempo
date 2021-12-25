@@ -1,14 +1,23 @@
 <svelte:head>
-    <title>MPC 2021 💃🕺 Dance Tempo</title>
+    <title>MPC 2021 Dance Tempo</title>
 </svelte:head>
 
 <script>
     import Sequencer from "$lib/Sequencer.svelte";
+    import Confirm from "$lib/Confirm.svelte";
+    import Modal from "svelte-simple-modal";
+    import {page} from '$app/stores';
+    import {STRINGS} from "../constants";
+
+    const pattern = $page.query.get('p');
 </script>
 
-<main class="flex flex-col items-center justify-center h-screen space-y-4">
-    <p>Drag the slider to set the tempo. Click <em>Play</em> to start the beat. Feel free to dance!</p>
-<!--    <p>When you're happy (and when I've implemented the button) click <em>next</em> to continue.</p>-->
+<main class="max-w-prose flex flex-col items-center justify-center h-screen">
+    <p class="my-4 text-center">{@html STRINGS.INSTRUCTIONS}</p>
 
-    <Sequencer/>
+    <Sequencer pattern={Number(pattern) || 1}/>
+
+    <Modal>
+        <Confirm/>
+    </Modal>
 </main>

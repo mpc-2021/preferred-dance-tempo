@@ -179,7 +179,7 @@
 </script>
 
 <!--<label for=bpm>Tempo</label>-->
-<input class="w-full my-4" name=bpm id=bpm type=range min={TEMPO_BPM.MIN} max={TEMPO_BPM.MIN} bind:value={$tempo} step=.1/>
+<input class="w-full my-4" name=bpm id=bpm type=range min={TEMPO_BPM.MIN} max={TEMPO_BPM.MAX} bind:value={$tempo} step=.1/>
 {#if $isPlaying}
     <button class="my-4 w-24 bg-red-500 hover:bg-red-400 border-red-700 hover:border-red-500" on:click={stop}>Stop</button>
 {:else}

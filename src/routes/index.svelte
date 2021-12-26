@@ -8,10 +8,10 @@
     import Confirm from "$lib/Confirm.svelte";
     import Modal from "svelte-simple-modal";
     import {page} from '$app/stores';
-    import {STRINGS} from "../constants";
+    import {SEQUENCER_DEFAULT_PATTERN, STRINGS} from "../constants";
     import {onMount} from "svelte";
 
-    const pattern = $page.query.get('p');
+    const pattern = Number($page.query.get('p')) || SEQUENCER_DEFAULT_PATTERN;
 
     onMount(() => {
         console.log(`Sequencer v${__VERSION__}`);
@@ -21,7 +21,7 @@
 <main class="max-w-prose flex flex-col items-center justify-center h-screen">
     <p class="my-4 text-center">{@html STRINGS.INSTRUCTIONS}</p>
 
-    <Sequencer pattern={Number(pattern) || 1}/>
+    <Sequencer {pattern}/>
 
     <Modal>
         <Confirm/>

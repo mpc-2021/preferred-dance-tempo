@@ -4,7 +4,7 @@
     export let pattern = 1;
     import {onMount} from "svelte";
     import {isPlaying, tempo, hasPlayed, hasConfirmed} from "../stores";
-    import {SEQUENCER_MAX_STEPS} from "../constants";
+    import {SEQUENCER_MAX_STEPS, TEMPO_BPM} from "../constants";
 
     let audioContext, timerID, nextNoteTime = 0.0, currentNote = 0;
     const noteQueue = [];
@@ -179,7 +179,7 @@
 </script>
 
 <!--<label for=bpm>Tempo</label>-->
-<input class="w-full my-4" name=bpm id=bpm type=range min=20 max=300 bind:value={$tempo} step=.1/>
+<input class="w-full my-4" name=bpm id=bpm type=range min={TEMPO_BPM.MIN} max={TEMPO_BPM.MIN} bind:value={$tempo} step=.1/>
 {#if $isPlaying}
     <button class="my-4 w-24 bg-red-500 hover:bg-red-400 border-red-700 hover:border-red-500" on:click={stop}>Stop</button>
 {:else}

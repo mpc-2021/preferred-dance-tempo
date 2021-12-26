@@ -13,7 +13,7 @@
     const sequence = {kick: [], snare: [], hat: []};
     const samples = new Map;
 
-    if (pattern < 1 || pattern > 11) {
+    if (pattern < 1 || pattern > 15) {
         pattern = 1;
     }
 

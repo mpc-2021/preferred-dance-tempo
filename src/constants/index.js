@@ -1,4 +1,5 @@
 export const SEQUENCER_MAX_STEPS = 32;
+export const SEQUENCER_DEFAULT_PATTERN = 10;
 
 export const TEMPO_BPM = {
     MIN: 20,
